@@ -1,0 +1,29 @@
+# Starts SQL Server (and optionally the API) for local development.
+#
+#   docker compose up -d sqlserver     -> only the database, run the API yourself with `dotnet run`
+#   docker compose up --build          -> database + API in containers (API on http://localhost:8080)
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64            # needed on Apple Silicon (runs under emulation)
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_strong_Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  api:
+    build: .
+    depends_on:
+      - sqlserver
+    ports:
+      - "8080:8080"
+    environment:
+      # Inside the compose network the database host is "sqlserver", not "localhost".
+      Tenancy__Tenants__0__ConnectionString: "Server=sqlserver,1433;Database=TenantDesk_Acme;User Id=sa;Password=Your_strong_Passw0rd;TrustServerCertificate=True"
+      Tenancy__Tenants__1__ConnectionString: "Server=sqlserver,1433;Database=TenantDesk_Globex;User Id=sa;Password=Your_strong_Passw0rd;TrustServerCertificate=True"
+
+volumes:
+  sqlserver-data:

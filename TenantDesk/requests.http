@@ -1,0 +1,50 @@
+# Works with the "REST Client" extension in VS Code, Visual Studio 2022 and JetBrains Rider.
+# Start the API first:  dotnet run --project src/TenantDesk.Api   (http://localhost:5080)
+
+@host = http://localhost:5080
+
+### Health check (no tenant needed)
+GET {{host}}/health
+
+### Acme: create a ticket
+POST {{host}}/api/tickets
+X-Tenant: acme
+X-Api-Key: acme-dev-key
+Content-Type: application/json
+
+{
+  "title": "Printer on 3rd floor is on fire",
+  "description": "Smoke everywhere",
+  "priority": "High"
+}
+
+### Acme: list tickets
+GET {{host}}/api/tickets
+X-Tenant: acme
+X-Api-Key: acme-dev-key
+
+### Acme: list only open tickets
+GET {{host}}/api/tickets?status=Open
+X-Tenant: acme
+X-Api-Key: acme-dev-key
+
+### Acme: move ticket 1 to InProgress
+PATCH {{host}}/api/tickets/1/status
+X-Tenant: acme
+X-Api-Key: acme-dev-key
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+### Globex: its own list - Acme's tickets are NOT visible here
+GET {{host}}/api/tickets
+X-Tenant: globex
+X-Api-Key: globex-dev-key
+
+### Wrong key -> 401
+GET {{host}}/api/tickets
+X-Tenant: acme
+X-Api-Key: wrong-key
+
+### No tenant -> 400
+GET {{host}}/api/tickets
